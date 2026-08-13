@@ -1,20 +1,9 @@
 
-
 import http, { IncomingMessage, Server, ServerResponse } from 'http';
 import path from 'path';
 import config from './config';
-import addRoutes, { RouteHandler, routes } from './helpers/RouteHandler';
-
-addRoutes('GET', '/', (req, res) => {
-  res.writeHead(200, { 'content-type': 'application/json' });
-
-    res.end(
-      JSON.stringify({
-        message: 'hello i am node js bro',
-        path: req.url,
-      }),
-    );
-})
+import { RouteHandler, routes } from './helpers/RouteHandler';
+import './routes'
 
 const server: Server = http.createServer(
   (req: IncomingMessage, res: ServerResponse) => {
@@ -23,26 +12,18 @@ const server: Server = http.createServer(
     const path = req.url||' ';
     const methodMap=routes.get(method)
     const handler: RouteHandler|undefined= methodMap?.get(path)
-    if (handler) {
-      res.writeHead(200, { 'content-type': 'application/json' });
-
-        res.end(
-          JSON.stringify({
-            message: 'hello i am node js bro',
-            path: req.url,
-          }),
-        );
-    } else {
-      res.writeHead(404, { 'content-type': 'application/json' });
-      res.end(
-        JSON.stringify({
-          success: false,
-          message: 'route not found',
-          path,
-          
-        })
-      )
-    }
+   if (handler) {
+     handler(req, res);
+   } else {
+     res.writeHead(404, { 'content-type': 'application/json' });
+     res.end(
+       JSON.stringify({
+         success: false,
+         message: 'route not found',
+         path,
+       }),
+     );
+   }
    
     //-------root route----------
     // if (req.url == '/' && req.method == 'GET') {
