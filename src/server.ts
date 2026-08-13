@@ -20,23 +20,22 @@
 
 import http, { IncomingMessage, Server, ServerResponse } from 'http'
 import path from 'path'
-
+import config from './config'
 
 const server: Server = http.createServer((req: IncomingMessage, res: ServerResponse) => {
-  console.log('server is running by node....');
-  if (req.url == '/', req.method = 'GET') {
-    res.writeHead(200, { 'content-type': 'application/json' })
+  
+  if (req.url == '/' && req.method == 'GET') {
+    res.writeHead(200,{'content-type': 'application/json'})
+
     res.end(
-      JSON.stringify(
-        {
-          message: 'this is run by port',
-          path: req.url,
-        }
-      )
+      JSON.stringify({
+        message: 'hello i am node js',
+        path:req.url
+      })
     )
-  }
+  } 
 })
 
-server.listen(5000, () => {
-  console.log(`server is running on ${5000}`);
+server.listen(config.port, () => {
+  console.log(`Server is running on port ${config.port}`);
 })
