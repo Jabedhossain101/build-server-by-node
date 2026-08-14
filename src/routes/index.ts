@@ -24,10 +24,40 @@ addRoutes('POST', '/api/users', async (req, res) => {
   const newUser = {
     id: Date.now(),
     ...body,
-  }
+  };
 
   users?.push(newUser);
 
-  writeUsers(users)
+  writeUsers(users);
   sendJson(res, 201, body);
+});
+
+addRoutes('PUT', '/api/users/:id', async (req, res) => {
+  const { id } = (req as any).params;
+
+  const body = await parseBody(req);
+
+  const users = readUsers();
+
+  const index = users.findIndex((user: any) => user.id == id);
+
+  if (index === -1) {
+    return sendJson(res, 404, {
+      success: false,
+      message: 'user not found',
+    });
+  }
+
+  users[index] = {
+    ...users[index],
+    ...body,
+  };
+
+  writeUsers(users);
+
+  return sendJson(res, 200, {
+    success: true,
+    message: `id ${id} user updated`,
+    data: users[index],
+  });
 });
