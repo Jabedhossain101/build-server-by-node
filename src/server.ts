@@ -5,6 +5,36 @@ import config from './config';
 import { RouteHandler, routes } from './helpers/RouteHandler';
 import './routes'
 
+
+function findDynamicRoute(method: string, url: string) {
+  const methodMap = routes.get(method)
+  
+  if (!methodMap) return null;
+  for (const [routePath, handler] of methodMap.entries()) {
+    const routeParts = routePath.split('/');
+    const urlParts = url.split('/');
+    if (routeParts.length !== urlParts.length) continue;
+
+    const params: any = {};
+    let matched = true;
+
+    //'/api/users/:id'
+    for (let i = 0; i < routeParts.length; i++){
+      if (routeParts[i]?.startsWith(':')) {
+        params[routeParts[i]?.substring(-1)!]= urlParts[i]
+      } else if(routeParts[i] !==urlParts[i]){
+        matched = false
+        break;
+      }
+    }
+    if (matched) {
+      return { handler, params };
+    }
+  }
+
+  return null;
+}
+
 const server: Server = http.createServer(
   (req: IncomingMessage, res: ServerResponse) => {
    
@@ -14,7 +44,14 @@ const server: Server = http.createServer(
     const handler: RouteHandler|undefined= methodMap?.get(path)
    if (handler) {
      handler(req, res);
-   } else {
+
+   }
+   else if (findDynamicRoute(method,path)) {
+     const match = findDynamicRoute(method, path);
+     (req as any).params = match?.params;
+     
+   }
+   else {
      res.writeHead(404, { 'content-type': 'application/json' });
      res.end(
        JSON.stringify({
@@ -23,63 +60,7 @@ const server: Server = http.createServer(
          path,
        }),
      );
-   }
-   
-    //-------root route----------
-    // if (req.url == '/' && req.method == 'GET') {
-    //   res.writeHead(200, { 'content-type': 'application/json' });
-
-    //   res.end(
-    //     JSON.stringify({
-    //       message: 'hello i am node js',
-    //       path: req.url,
-    //     }),
-    //   );
-    // }
-
-
-
-    //------------health route--------
-    // if (req.url == '/api' && req.method == 'GET') {
-    //   res.writeHead(200, { 'content-type': 'application/json' });
-
-    //   res.end(
-    //     JSON.stringify({
-    //       message: 'heath status okay',
-    //       path: req.url,
-    //     }),
-    //   );
-    // }
-
-
-    // -------User data post method------
-    
-//     if (req.url == '/api/users' && req.method == 'POST') {
-//       // const user = {
-//       //   id: 1,
-//       //   name: 'alice',
-//       // };
-//       // res.writeHead(200, { 'content-type': 'application/json' });
-//       // res.end(JSON.stringify(user));
-
-//       let body = ' ';
-//       //listen for data chunk
-
-//       req.on('data', chunk => {
-//         body += chunk.toString();
-//       });
-
-//       req.on('end', () => {
-//         try {
-//           const parseBody = JSON.parse(body);
-//           console.log(parseBody);
-// console.log('catching on change');
-//           res.end(JSON.stringify(parseBody));
-//         } catch (err:any) {
-//           console.log(err?.message);
-//         }
-//       });
-//     }
+   } 
   },
 );
 
